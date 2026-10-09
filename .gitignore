@@ -1,0 +1,33 @@
+# ---------- Unreal Engine ----------
+# 编译产物与生成物
+Binaries/
+Intermediate/
+DerivedDataCache/
+Saved/
+Build/
+*.VC.db
+*.opensdf
+*.opendb
+*.sdf
+*.sln
+*.slnx
+*.suo
+*.xcodeproj
+*.xcworkspace
+
+# ---------- IDE ----------
+.vs/
+.idea/
+.vscode/
+
+# ---------- OS ----------
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ---------- 临时文件 ----------
+_build_diag.bat
+
+# ---------- 说明 ----------
+# 注意：Content/ 与 GameAssets/ 中的资产需要入库（含 .uasset / .umap），
+# 这里不忽略。若日后资产过大，可考虑改用 Git LFS。
