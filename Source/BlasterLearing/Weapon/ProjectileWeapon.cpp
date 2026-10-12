@@ -28,7 +28,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 		 {
 			 if (InstigatorPawn->HasAuthority())//在服务器
 			 {
-				 if (InstigatorPawn->IsLocallyControlled())//服务器控制 生成复制子弹
+				 if (InstigatorPawn->IsLocallyControlled() || !InstigatorPawn->IsPlayerControlled())//服务器控制 生成复制子弹
 				 {
 					 SpawnedProjectile = World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
 					 SpawnedProjectile->bUseServerSideRewind = false;

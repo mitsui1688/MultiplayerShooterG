@@ -40,7 +40,10 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	ABlasterCharacter* OwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
 	if (OwnerCharacter)
 	{
-		ABlasterPlayerController* OwnerController = Cast<ABlasterPlayerController>(OwnerCharacter->Controller);
+		// 这里必须是 AController* 而不是 ABlasterPlayerController:
+		// bot 的 Controller 是 ABlasterAIController,Cast 到 PlayerController 会返回 nullptr,
+		// 导致 ApplyDamage 整段被跳过、bot 开枪永远打不出伤害。
+		AController* OwnerController = OwnerCharacter->Controller;
 		if (OwnerController)
 		{
 			if (OwnerCharacter->HasAuthority() && !bUseServerSideRewind)
@@ -51,14 +54,16 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 				Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 				return;
 			}
+			// SSR 回滚只对真人客户端有意义(需要 PlayerController 的服务器时间)。
+			ABlasterPlayerController* BlasterOwnerController = Cast<ABlasterPlayerController>(OwnerController);
 			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
-			if (bUseServerSideRewind && OwnerCharacter->GetLagCompensation() && OwnerCharacter->IsLocallyControlled() && HitCharacter)
+			if (bUseServerSideRewind && BlasterOwnerController && OwnerCharacter->GetLagCompensation() && OwnerCharacter->IsLocallyControlled() && HitCharacter)
 			{
 				OwnerCharacter->GetLagCompensation()->ProjectileServerScoreRequest(
 					HitCharacter,
 					TraceStart,
 					InitialVelocity,
-					OwnerController->GetServerTime() - OwnerController->SingleTripTime
+					BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime
 				);
 			}
 		}

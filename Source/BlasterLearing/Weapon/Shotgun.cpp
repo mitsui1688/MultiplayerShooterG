@@ -24,7 +24,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		const FVector Start = SocketTransform.GetLocation();
 
-		//mapÖÐÓÃÀ´´æ´¢±»»÷ÖÐµÄ½ÇÉ«ºÍ»÷ÖÐµÄµ¯ÍèÊýÁ¿
+		//mapï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ½ï¿½É«ï¿½Í»ï¿½ï¿½ÐµÄµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		TMap<ABlasterCharacter*, uint32> HitMap;
 		TMap<ABlasterCharacter*, uint32> HeadShotHitMap;
 		for (FVector_NetQuantize HitTarget : HitTargets)
@@ -72,10 +72,10 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		}
 		TArray<ABlasterCharacter*> HitCharacters;
 
-		//½ÇÉ«±»»÷ÖÐµÄÉËº¦¼ÆËã
+		//ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
 		TMap<ABlasterCharacter*, float> DamageMap;
 
-		//Ñ­»·¼ÆËã½ÇÉ«ÉíÌåÊÜµ½µÄÉËº¦
+		//Ñ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½ï¿½Ëºï¿½
 		for (auto HitPair : HitMap)
 		{
 			if (HitPair.Key)
@@ -85,7 +85,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			}
 		}
 
-		//Ñ­»·¼ÆËã½ÇÉ«ÊÜµ½µÄ±¬Í·ÉËº¦
+		//Ñ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½Üµï¿½ï¿½Ä±ï¿½Í·ï¿½Ëºï¿½
 		for (auto HeadShotHitPair : HeadShotHitMap)
 		{
 			if (HeadShotHitPair.Key)
@@ -97,17 +97,19 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			}
 		}
 
-		//Ñ­»·Êµ¼Ê¶ÔÊÜµ½ÉËº¦µÄ½ÇÉ«Ôì³ÉÉËº¦
+		//Ñ­ï¿½ï¿½Êµï¿½Ê¶ï¿½ï¿½Üµï¿½ï¿½Ëºï¿½ï¿½Ä½ï¿½É«ï¿½ï¿½ï¿½ï¿½Ëºï¿½
 		for (auto DamagePair : DamageMap)
 		{
 			if (DamagePair.Key && InstigatorController)
 			{
-				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+				// åŒ HitScanWeapon:bot éžçŽ©å®¶æŽ§åˆ¶,IsLocallyControlled() æ’ false,
+				// éœ€è¦æ˜¾å¼è®©æœåŠ¡å™¨ç›´æŽ¥ç»“ç®—,å¦åˆ™ä¼¤å®³ä¸¢å¤±ã€‚
+				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled() || !OwnerPawn->IsPlayerControlled();
 				if (HasAuthority() && bCauseAuthDamage)
 				{
 					UGameplayStatics::ApplyDamage(
-						DamagePair.Key, //±»»÷ÖÐµÄ½ÇÉ«
-						DamagePair.Value, //Ôì³É´ÓÉÏÃæÑ­»·µÃµ½µÄÉËº¦Ö®ºÍ
+						DamagePair.Key, //ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ½ï¿½É«
+						DamagePair.Value, //ï¿½ï¿½É´ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½Ëºï¿½Ö®ï¿½ï¿½
 						InstigatorController,
 						this,
 						UDamageType::StaticClass()

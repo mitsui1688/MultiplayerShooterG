@@ -32,7 +32,10 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
 		if (BlasterCharacter  && InstigatorController)
 		{
-			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			// bot 由 AIController 驱动,IsLocallyControlled() 恒为 false,
+			// 而 SSR 回滚只存在于玩家路径,所以 bot 开火会两头都落空、伤害直接丢失。
+			// 这里补一条:非玩家控制的 Pawn 在服务器上就直接权威结算伤害。
+			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled() || !OwnerPawn->IsPlayerControlled();
 			if (HasAuthority() && bCauseAuthDamage)
 			{
 				const float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;

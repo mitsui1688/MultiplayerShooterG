@@ -71,7 +71,7 @@ ABlasterCharacter::ABlasterCharacter()
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	/*
-	* Hit Boxes(ÓÃÓÚ·şÎñÆ÷µ¹´øÃüÖĞÅĞ¶Ï)
+	* Hit Boxes(ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½)
 	*/
 
 	head = CreateDefaultSubobject<UBoxComponent>(TEXT("head"));
@@ -190,7 +190,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	}
 	bElimmed = true;
 	PlayElimMontage();
-	// ¿ªÊ¼ÈÜ½âĞ§¹û
+	// ï¿½ï¿½Ê¼ï¿½Ü½ï¿½Ğ§ï¿½ï¿½
 	if (DissolveMaterialInstance)
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
@@ -200,19 +200,19 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	}
 	StartDissolve();
 
-	// ½ûÓÃ½ÇÉ«ÒÆ¶¯
+	// ï¿½ï¿½ï¿½Ã½ï¿½É«ï¿½Æ¶ï¿½
 	bDisableGameplay = true;
 	GetCharacterMovement()->DisableMovement();
 	if (Combat)
 	{
 		Combat->FireButtonPressed(false);
 	}
-	// ½ûÓÃÅö×²
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Éú³ÉÏû³ı»úÆ÷ÈË
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	if (ElimBotEffect)
 	{
 		FVector ElimBotSpawnPoint(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z + 200.f);
@@ -776,7 +776,7 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	float Speed = CalculateSpeed();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
-	if (Speed == 0.f && !bIsInAir) // ¾²Ö¹²»¶¯£¬²»ÌøÔ¾
+	if (Speed == 0.f && !bIsInAir) // ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¾
 	{
 		bRotateRootBone = true;
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
@@ -789,7 +789,7 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		bUseControllerRotationYaw = true;
 		TurnInPlace(DeltaTime);
 	}
-	if (Speed > 0.f || bIsInAir) // ÅÜ»òÕßÌø
+	if (Speed > 0.f || bIsInAir) // ï¿½Ü»ï¿½ï¿½ï¿½ï¿½ï¿½
 	{
 		bRotateRootBone = false;
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
@@ -806,7 +806,7 @@ void ABlasterCharacter::CalculateAO_Pitch()
 	AO_Pitch = GetBaseAimRotation().Pitch;
 	if (AO_Pitch > 90.f && !IsLocallyControlled())
 	{
-		// ½«map¸©Ñö½Ç´Ó [270, 360) ×ª»»Îª [-90, 0)
+		// ï¿½ï¿½mapï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ [270, 360) ×ªï¿½ï¿½Îª [-90, 0)
 		FVector2D InRange(270.f, 360.f);
 		FVector2D OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
@@ -992,7 +992,7 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 {
 	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	UWorld* World = GetWorld();
-	if (BlasterGameMode && World && !bElimmed && DefaultWeaponClass) 
+	if (BlasterGameMode && World && !bElimmed && DefaultWeaponClass)
 	{
 		AWeapon* StartingWEeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
 		StartingWEeapon->bDestroyWeapon = true;
@@ -1000,6 +1000,18 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 			{
 				Combat->EquipWeapon(StartingWEeapon);
 			}
+	}
+}
+
+void ABlasterCharacter::SetIsAI(bool bInIsAI)
+{
+	bIsAI = bInIsAI;
+
+	// å‘Šè¯‰ CombatComponent è·³è¿‡æ‰€æœ‰ HUD/å‡†æ˜Ÿç›¸å…³çš„åˆ†æ”¯ã€‚
+	// CombatComponent é‡Œ bIsAI æ˜¯ç§æœ‰çš„,WriteAsAI() æ˜¯å”¯ä¸€çš„å†™å…¥å£ã€‚
+	if (Combat)
+	{
+		Combat->WriteAsAI(bInIsAI);
 	}
 }
 

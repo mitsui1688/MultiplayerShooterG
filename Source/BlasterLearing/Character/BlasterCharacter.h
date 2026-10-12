@@ -75,6 +75,15 @@ public:
 
 	void SetTeamColor(ETeam Team);
 
+	/**
+	* 标记这个角色由 AIController 驱动,而不是真人玩家。
+	* 会让 CombatComponent 跳过所有依赖 ABlasterPlayerController / HUD 的分支。
+	* 由 ABlasterAIController 在 Possess 时置位。
+	*/
+	void SetIsAI(bool bInIsAI);
+
+	FORCEINLINE bool IsAI() const { return bIsAI; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -354,7 +363,13 @@ private:
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
 
-public:	
+public:
+	/**
+	* true 表示由 AIController 驱动。只存在于别处判断用,
+	* 不需要复制 —— bot 只活在服务器上。
+	*/
+	bool bIsAI = false;
+
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();

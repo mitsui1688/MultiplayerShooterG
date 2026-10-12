@@ -84,6 +84,11 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// bot 没有视口也没有 HUD,TraceUnderCrosshairs/SetHUDCrosshairs 对它是无意义的,
+	// 强行走会拿到未初始化的 ViewportSize 并在 HUD 分支里空指针。
+	// bot 的瞄准由 AIFireAt() 自己算。
+	if (bIsAI) return;
+
 	if (Character && Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
@@ -102,6 +107,59 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 	{
 		Fire();
 	}
+}
+
+void UCombatComponent::AIFireAt(AActor* TargetActor, float AimSpreadDegrees)
+{
+	if (EquippedWeapon == nullptr || Character == nullptr || TargetActor == nullptr) return;
+
+	// bot 只被服务器控制,所以这里假定 HasAuthority()。
+	// 服务器调用自己的 Server RPC 是合法的(直接本地执行),
+	// 但为了语义清晰,这里直接填好 HitTarget 后走 Fire()。
+	const FVector TraceStart = EquippedWeapon->GetWeaponMesh() &&
+		EquippedWeapon->GetWeaponMesh()->DoesSocketExist(FName("MuzzleFlash"))
+		? EquippedWeapon->GetWeaponMesh()->GetSocketLocation(FName("MuzzleFlash"))
+		: Character->GetActorLocation();
+
+	// 瞄目标躯干中心,而不是脚底
+	const FVector TargetLocation = TargetActor->GetActorLocation();
+
+	// 从枪口到目标做一次可见性检测:看得见就直接瞄目标,
+	// 看不见(有墙)就把着弹点放在墙上,bot 会打在掩体上。
+	FHitResult VisibilityHit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Character);
+	Params.AddIgnoredActor(EquippedWeapon);
+	Params.AddIgnoredActor(TargetActor);
+
+	const bool bBlocked = GetWorld()->LineTraceSingleByChannel(
+		VisibilityHit,
+		TraceStart,
+		TargetLocation,
+		ECC_Visibility,
+		Params
+	);
+
+	FVector AimPoint = bBlocked ? VisibilityHit.ImpactPoint : TargetLocation;
+
+	// 命中散布:给瞄准点加一个随机偏移,模拟 bot 枪法不准。
+	// AimSpreadDegrees = 0 时百发百中(默认);调大后偏移量随距离放大。
+	if (AimSpreadDegrees > 0.f)
+	{
+		const float Distance = FVector::Dist(TraceStart, AimPoint);
+		const float MaxOffset = Distance * FMath::Tan(FMath::DegreesToRadians(AimSpreadDegrees));
+
+		// 竖直方向的散布压到 1/3,避免子弹乱飞到天上去,看起来更自然
+		AimPoint += FVector(
+			FMath::FRandRange(-MaxOffset, MaxOffset),
+			FMath::FRandRange(-MaxOffset, MaxOffset),
+			FMath::FRandRange(-MaxOffset, MaxOffset) * 0.33f
+		);
+	}
+
+	HitTarget = AimPoint;
+
+	Fire();
 }
 
 void UCombatComponent::Fire()
@@ -506,7 +564,7 @@ void UCombatComponent::OnRep_Grenades()
 
 void UCombatComponent::JumpToShotgunEnd()
 {
-	// ��ת�������ϵ�����
+	// ��ת�������ϵ�����
 	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
 	if (AnimInstance && Character->GetReloadMontage())
 	{
@@ -766,7 +824,7 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 				HUDPackage.CrosshairsBottom = nullptr;
 				HUDPackage.CrosshairsTop = nullptr;
 			}
-			// ����׼��ɢ��
+			// ����׼��ɢ��
 
 			// [0, 600] -> [0, 1]
 			FVector2D WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
@@ -874,7 +932,7 @@ bool UCombatComponent::CanFire()
 //	}
 //	if (bLocallyReloading)
 //	{
-//		// ��������ǹ�����ӵ�ʱװ��Ĺ����п���
+//		// ��������ǹ�����ӵ�ʱװ��Ĺ����п���
 //		if (!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
 //		{
 //			bLocallyReloading = false;

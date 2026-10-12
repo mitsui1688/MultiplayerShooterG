@@ -35,6 +35,24 @@ public:
 
 	void FireButtonPressed(bool bPressed);
 
+	/**
+	* AI/bot 专用开火入口。
+	* 不能走 FireButtonPressed:那条路径依赖 TraceUnderCrosshairs,
+	* 而后者需要玩家的 GEngine->GameViewport 和 ABlasterHUD —— bot 两样都没有。
+	* 这里由 AI 自己从武器枪口向目标做一次 LineTrace 得到 HitTarget,再复用 Fire() 的流程。
+	* @param TargetActor       要射击的目标(通常是某个 ABlasterCharacter)
+	* @param AimSpreadDegrees  命中散布(度)。0 = 百发百中;越大越打不准。由 AI 控制器传入。
+	*/
+	void AIFireAt(AActor* TargetActor, float AimSpreadDegrees = 0.f);
+
+	/**
+	* 由 ABlasterCharacter::SetIsAI 调用,标记本组件属于 bot。
+	* 置位后 TickComponent 会整体早退,不再走准星/HUD/FOV 逻辑。
+	*/
+	void WriteAsAI(bool bInIsAI) { bIsAI = bInIsAI; }
+
+	FORCEINLINE bool IsAI() const { return bIsAI; }
+
 	UFUNCTION(BlueprintCallable)
 	void ShotgunShellReload();
 
@@ -117,6 +135,14 @@ protected:
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character;
+
+	/**
+	* true 表示这个 CombatComponent 归属的是一个 AI/bot 角色。
+	* bot 没有 ABlasterPlayerController,也没有 HUD,
+	* 所以 Tick 里所有跟准星/开火表现/HUD 相关的分支都必须跳过,
+	* 否则会在空指针分支里静默失效(甚至崩溃)。
+	*/
+	bool bIsAI = false;
 	UPROPERTY()
 	class ABlasterPlayerController* Controller;
 	UPROPERTY()
@@ -157,10 +183,10 @@ private:
 	FHUDPackage HUDPackage;
 
 	/*
-	* ��׼����Ұ
+	* ��׼����Ұ
 	*/
 
-	//����׼ʱ��Ĭ����Ұ,����Ϊ����ʱ����Ļ�����Ұ
+	//����׼ʱ��Ĭ����Ұ,����Ϊ����ʱ����Ļ�����Ұ
 	float DefaultFOV;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
@@ -174,7 +200,7 @@ private:
 	void InterpFOV(float DeltaTime);
 
 	/*
-	* �Զ�����
+	* �Զ�����
 	*/
 
 	FTimerHandle FireTimer;
@@ -185,7 +211,7 @@ private:
 
 	bool CanFire();
 
-	//��ǰװ������Я���ĵ�ҩ
+	//��ǰװ������Я���ĵ�ҩ
 	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
 	int32 CarriedAmmo;
 
